@@ -1,0 +1,61 @@
+wtf I need to store:
+
+users
+---------
+id (string/uuid)
+name
+email
+passwordHash
+profileImageUrl (optional)
+createdAt
+
+events
+---------
+id (string/uuid)
+title
+description
+location
+dateTime
+createdBy (userId)
+createdAt
+isPrivate (boolean)
+
+
+event_participants
+---------
+id
+eventId
+userId
+joinedAt
+
+
+event_messages
+---------
+id
+eventId
+userId
+messageText
+timestamp
+
+
+NEEDS RIGHT NOW
+| Page              | What Data It Uses           |
+| ------------------| --------------------------- |
+| Main page         | events list from `events`   |
+| Login page        | users table & Authentication|
+| Posted event page | events + event_participants |
+| Group chat        | event_messages              |
+
+
+
+
+
+FOR LATER(KNA GUD NGL)
+| Feature            | Table to Add      |
+| ------------------ | ----------------- |
+| Event categories   | categories        |
+| Likes / reactions  | message_reactions |
+| Block/report users | reports           |
+| Notifications      | notifications     |
+
+
