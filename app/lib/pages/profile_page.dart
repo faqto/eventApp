@@ -1,8 +1,13 @@
 import 'package:app/model/profile_buttons_model.dart';
+import 'package:app/model/profile_stat_model.dart';
+import 'package:app/pages/cards/profile_event_card.dart';
+import 'package:app/pages/items/profile_stat_item.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatelessWidget {
   ProfilePage({super.key});
+
+  final ProfileStat stats = ProfileStat(hosted: 6, attended: 67, saved: 12);
 
   final List<ProfileAction> actions = [
   ProfileAction(
@@ -24,7 +29,6 @@ class ProfilePage extends StatelessWidget {
 
 
   @override
-  @override
 Widget build(BuildContext context) {
   return SingleChildScrollView(
     child: Padding(
@@ -32,32 +36,89 @@ Widget build(BuildContext context) {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Text("Username"),
-          const Text("location"),
-          const Text("description"),
+          const SizedBox(height: 40),
+
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: Colors.grey.shade300,
+          ),
+
+          const SizedBox(height: 40),
+
+          const Text(
+            "Ben",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+
+          const SizedBox(height: 40),
+
+          const Text(
+            "Canacotan, Tagum",
+            style: TextStyle(color: Colors.grey),
+          ),
+
+          const SizedBox(height: 40),
+
+          const Text(
+            "I like to join some game events and other stuff to touch some grass or have fun",
+            textAlign: TextAlign.center,
+          ),
+
 
           const SizedBox(height: 20),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              _StatItem(),
-              SizedBox(width: 20),
-              _StatItem(),
-              SizedBox(width: 20),
-              _StatItem(),
-            ],
+          //stats profile
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            
+            decoration: BoxDecoration(
+              color: const Color(0xFFB39DFF),
+              borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                BoxShadow(
+                  color: Colors.grey,
+                  spreadRadius: 2,
+                  blurRadius: 2,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                StatItem(label: 'Hosted', value: stats.hosted.toString()),
+                const SizedBox(width: 20),
+                StatItem(label: 'Attended', value: stats.attended.toString()),
+                const SizedBox(width: 20),
+                StatItem(label: 'Saved', value: stats.saved.toString()),
+              ],
+            ),
           ),
 
           const SizedBox(height: 20),
 
-          const Text("My Events"),
-          const Divider(thickness: 1, color: Colors.grey),
 
-          const Text("No events listed"),
+          const Text("My Events",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const Divider(thickness: 1, color: Colors.grey),
+          //profile events list
+          ListView.builder(
+            itemCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) {
+            return const ProfileEventCard();
+          }),
+          
 
           const SizedBox(height: 20),
 
+          
+          const Text("Account Settings",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const Divider(thickness: 1, color: Colors.grey),
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -83,19 +144,4 @@ Widget build(BuildContext context) {
   );
 }
 
-}
-
-class _StatItem extends StatelessWidget {
-  const _StatItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: const [
-        Text("data", style: TextStyle(fontWeight: FontWeight.bold)),
-        SizedBox(height: 4),
-        Text("data", style: TextStyle(color: Colors.grey)),
-      ],
-    );
-  }
 }

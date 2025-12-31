@@ -31,10 +31,12 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        
         title: Text(title[currentpage]),
         centerTitle: true,
-        backgroundColor: Colors.purple,
+        backgroundColor: Color(0xFFB39DFF)
       ),
+
       body: pages[currentpage],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.blueGrey,

@@ -1,3 +1,4 @@
+import 'package:app/pages/cards/chat_card.dart';
 import 'package:flutter/material.dart';
 
 class ChatPage extends StatelessWidget {
@@ -6,8 +7,12 @@ class ChatPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.blue,
-      child: Text("chat"),
+      margin: EdgeInsets.all(5),
+      child: ListView(
+        children: [
+          ChatCard(),
+        ],
+      )
     );
   }
 }
