@@ -1,4 +1,4 @@
-import 'package:app/model/events_model.dart';
+import 'package:app/models/events_model.dart';
 import 'package:flutter/material.dart';
 
 class EventsCard extends StatelessWidget {
@@ -66,7 +66,16 @@ class EventsCard extends StatelessWidget {
                   children: [
                     const Icon(Icons.calendar_today, size: 14),
                     const SizedBox(width: 6),
-                    Text(event.date),
+                    Text(
+                      () {
+                        final date = DateTime.tryParse(event.date);
+                        if (date != null) {
+                          return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+                        } else {
+                          return event.date;
+                        }
+                      }(),
+                    ),
 
                     const SizedBox(width: 16),
 

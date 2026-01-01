@@ -1,6 +1,8 @@
-import 'package:app/model/events_model.dart';
+import 'package:app/controllers/app_controller.dart';
+import 'package:app/models/events_model.dart';
 import 'package:app/pages/cards/events_card.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class EventsPage extends StatefulWidget {
   const EventsPage({super.key});
@@ -11,43 +13,16 @@ class EventsPage extends StatefulWidget {
 
 class _EventsPageState extends State<EventsPage> {
 
-  final List<String> _baseCategories  = ["ALL", "Gaming", "Food", "Culture", "Environment"];
+  final List<String> _baseCategories  = ["ALL", "Gaming", "Food", "Culture", "Environment","Sports"];
   late List<String> _displayCategories;
   String selectedCategory = "ALL";
 
-  List<Event> get filteredEvents {
-  if (selectedCategory == "ALL") {
-    return events;
+
+  List<Event> filteredEvents(List<Event> events) {
+    if (selectedCategory == "ALL") return events;
+    return events.where((e) => e.category == selectedCategory).toList();
   }
-  return events
-      .where((event) => event.category == selectedCategory)
-      .toList();
-}
-
-  final List<Event> events = [
-    Event(
-      "Gaming Tournament",
-      "Join competitive players and win prizes.",
-      "Gaming",
-      "Sept 20, 2025",
-      "Tagum",
-    ),
-    Event(
-      "Food Festival",
-      "Taste dishes from local chefs.",
-      "Food",
-      "Oct 5, 2025",
-      "Cebu",
-    ),
-    Event(
-      "Cultural Night",
-      "Celebrate traditions and performances.",
-      "Culture",
-      "Nov 12, 2025",
-      "Davao",
-    ),
-  ];
-
+  
   @override
   void initState() {
     // TODO: implement initState
@@ -75,6 +50,8 @@ class _EventsPageState extends State<EventsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final events = context.watch<AppController>().events;
+    final filtered = filteredEvents(events);
   return Container(
     margin: EdgeInsets.all(5),
       child: Column(
@@ -116,9 +93,10 @@ class _EventsPageState extends State<EventsPage> {
           ),
         ),
 
+        
         //event cards
         Expanded(
-        child:  filteredEvents.isEmpty
+        child:  filtered.isEmpty
       ? Center(
           child: Text(
             "No event listed  ):",
@@ -130,10 +108,8 @@ class _EventsPageState extends State<EventsPage> {
           ),
         )
       : ListView.builder(
-          itemCount: filteredEvents.length,
-          itemBuilder: (context, index) {
-            return EventsCard(event: filteredEvents[index]);
-          },
+          itemCount: filtered.length,
+          itemBuilder: (context, index) => EventsCard(event: filtered[index])
         ),
       ),
 

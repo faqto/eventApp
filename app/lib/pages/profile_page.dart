@@ -1,5 +1,5 @@
-import 'package:app/model/profile_buttons_model.dart';
-import 'package:app/model/profile_stat_model.dart';
+import 'package:app/models/profile_buttons_model.dart';
+import 'package:app/models/profile_stat_model.dart';
 import 'package:app/pages/cards/profile_event_card.dart';
 import 'package:app/pages/items/profile_stat_item.dart';
 import 'package:flutter/material.dart';
@@ -102,13 +102,20 @@ Widget build(BuildContext context) {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const Divider(thickness: 1, color: Colors.grey),
+
           //profile events list
           ListView.builder(
-            itemCount: 2,
+            itemCount: 1,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemBuilder: (context, index) {
-            return const ProfileEventCard();
+              if(index>0){
+                return const ProfileEventCard();
+              }else{
+                return const Text("No hosted events  ):",
+                style: TextStyle(color: Colors.grey),);
+              }
+            
           }),
           
 
