@@ -27,6 +27,8 @@ class ProfilePage extends StatelessWidget {
   ),
 ];
 
+  final app = context.watch<AppController>();
+  final hostedEvents = app.hostedEvents; 
 
   @override
 Widget build(BuildContext context) {
