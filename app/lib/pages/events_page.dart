@@ -13,7 +13,7 @@ class EventsPage extends StatefulWidget {
 
 class _EventsPageState extends State<EventsPage> {
 
-  final List<String> _baseCategories  = ["ALL", "Gaming", "Food", "Culture", "Environment","Sports"];
+  final List<String> _baseCategories  = ["ALL", "Gaming", "Food", "Culture", "Environment","Sports", "Music", "Tech","Community"];
   late List<String> _displayCategories;
   String selectedCategory = "ALL";
 
@@ -50,7 +50,7 @@ class _EventsPageState extends State<EventsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final events = context.watch<AppController>().events;
+    final events = context.watch<AppController>().eventController.upcoming;//get upcoming events
     final filtered = filteredEvents(events);
   return Container(
     margin: EdgeInsets.all(5),

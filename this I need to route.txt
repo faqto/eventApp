@@ -1,0 +1,10 @@
+ things I need to route
+-main
+-event details
+-about
+-settings
+-create event
+-event history
+-chat page
+-profile edit 
+-login

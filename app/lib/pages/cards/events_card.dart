@@ -1,4 +1,5 @@
 import 'package:app/models/events_model.dart';
+import 'package:app/routes/routes.dart';
 import 'package:flutter/material.dart';
 
 class EventsCard extends StatelessWidget {
@@ -8,86 +9,92 @@ class EventsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      height: 190,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade300,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(20),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 12,
-            left: 12,
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                event.category,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+        onTap: () {
+          Navigator.pushNamed(
+            context,
+            Routes.eventDetails,
+            arguments: event,
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.all(16),
+          height: 190,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(20),
           ),
-
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  event.title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+          child: Stack(
+            children: [
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    event.category,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  event.description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.black54),
-                ),
-
-                const Spacer(),
-
-                Row(
+              ),
+        
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.calendar_today, size: 14),
-                    const SizedBox(width: 6),
                     Text(
-                      () {
-                        final date = DateTime.tryParse(event.date);
-                        if (date != null) {
-                          return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-                        } else {
-                          return event.date;
-                        }
-                      }(),
+                      event.title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-
-                    const SizedBox(width: 16),
-
-                    const Icon(Icons.location_on, size: 14),
-                    const SizedBox(width: 6),
-                    Expanded(child: Text(event.location)),
+        
+                    const SizedBox(height: 8),
+        
+                    Text(
+                      event.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+        
+                    const Spacer(),
+        
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today, size: 14),
+                        const SizedBox(width: 6),
+                        Text(
+                          "${event.date.month}/${event.date.day}/${event.date.year}",
+                        ),
+        
+                        const SizedBox(width: 16),
+        
+                        const Icon(Icons.location_on, size: 14),
+                        const SizedBox(width: 6),
+                        Expanded(child: Text(event.location)),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
