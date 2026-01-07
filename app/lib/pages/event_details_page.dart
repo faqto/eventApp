@@ -1,64 +1,88 @@
 import 'package:app/controllers/app_controller.dart';
-import 'package:app/models/event_utils.dart';
 import 'package:app/models/events_model.dart';
+import 'package:app/pages/widgets/event_action_section.dart';
+import 'package:app/pages/widgets/event_info_section.dart';
+import 'package:app/pages/widgets/event_title_section.dart';
 import 'package:app/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class EventDetailsPage extends StatelessWidget {
+class EventDetailsPage extends StatefulWidget {
   final Event event;
   const EventDetailsPage({super.key, required this.event});
 
   @override
+  State<EventDetailsPage> createState() => _EventDetailsPageState();
+}
+
+class _EventDetailsPageState extends State<EventDetailsPage> {
+  @override
   Widget build(BuildContext context) {
-    final currentUser = context.read<AppController>().currentUser;
-    final isHost = event.hostId == currentUser.id;
+    final app = context.read<AppController>();
+    final currentUser = app.currentUser;
+    final isHost = widget.event.hostId == currentUser.id;
+    final hostName = app.getEventHostName(widget.event);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(event.title),
+        title: const Text(
+          "Event Details",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        elevation: 2,
+        shadowColor: Colors.grey.shade300,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-                  Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: EventUtils.statusColor(event.status),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                EventUtils.statusText(event.status),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
+            EventTitleSection(
+              title: widget.event.title,
+              hostName: hostName,
+              category: widget.event.category,
+              status: widget.event.status,
             ),
-            Text(event.title, style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 10),
-            Text(event.category),
-            const SizedBox(height: 10),
-            Text(event.description),
-            const SizedBox(height: 20),
-            isHost ? ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      Routes.modifyEvent,
-                      arguments: event,
-                    );
-                  },
-                  child: const Text("Edit Event"),
-                )
-              : ElevatedButton(
-                  onPressed: () {
-                    // Your join event logic here
-                  },
-                  child: const Text("Join Event"),
-                ),
+            EventInfoSection(
+              location: widget.event.location,
+              dateTime: widget.event.dateTime,
+              description: widget.event.description,
+            ),
             
-            
-
+            EventActionsSection(
+              event: widget.event,
+              isHost: isHost,
+              hasJoined: app.hasJoined(widget.event.id),
+              joinedCount: widget.event.attendeeIds.length,
+              savedCount: widget.event.savedByIds.length,
+              onEditPressed: () {
+                Navigator.pushNamed(
+                  context,
+                  Routes.modifyEvent,
+                  arguments: widget.event,
+                );
+              },
+              onJoinPressed: () {
+                app.joinEvent(widget.event.id);
+                setState(() {});
+              },
+              onSavePressed: () {
+                app.saveEvent(widget.event.id);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Event saved")),
+                );
+                setState(() {});
+              },
+              onChatPressed: () {
+                Navigator.pushNamed(
+                  context,
+                  Routes.eventChat,
+                  arguments: widget.event,
+                );
+              },
+            ),
           ],
         ),
       ),

@@ -26,11 +26,11 @@ class _LoginPageState extends State<LoginPage> {
   final name = _nameController.text.trim();
   final password = _passwordController.text;
 
-  await Future.delayed(const Duration(seconds: 1)); // simulate API delay
+  await Future.delayed(const Duration(seconds: 1)); 
 
   if (!mounted) return;  
 
-  final success = app.login(name, password); // REAL LOGIN
+  final success = await app.userController.login(name, password); 
 
   if (!mounted) return; 
 

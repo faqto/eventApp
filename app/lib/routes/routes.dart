@@ -7,4 +7,5 @@ class Routes {
   static const about = '/about';
   static const login = '/login';
   static const register = '/register';
+  static const eventChat = '/event-chat';
 }

@@ -1,46 +1,34 @@
+import 'package:app/models/event_utils.dart';
+import 'package:app/models/events_model.dart';
+import 'package:app/routes/routes.dart';
 import 'package:flutter/material.dart';
 
-class ChatCard extends StatefulWidget {
-  const ChatCard({super.key});
+class ChatCard extends StatelessWidget {
+  final Event event;
 
-  @override
-  State<ChatCard> createState() => _ChatCardState();
-}
+  const ChatCard({super.key, required this.event});
 
-class _ChatCardState extends State<ChatCard> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.all(5),
-      padding: EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Container(
-            margin: EdgeInsets.only(right: 10),
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.grey,
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Event title",style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
-                Text("hello and welcome to the event",style: TextStyle(color: Colors.grey),),
-              ],
-            ),
-          ),
-          const Text(
-          "1:00 am",
-          style: TextStyle(color: Colors.grey, fontSize: 12),)
-        ],
+    return Card(
+      child: ListTile(
+        title: Text(event.title),
+        subtitle: Text(event.location),
+        trailing: Text(event.status.name),
+        leadingAndTrailingTextStyle: TextStyle(
+            color: EventUtils.statusColor(event.status),
+        )
+        ,
+        titleTextStyle: TextStyle(
+          fontSize: 18
+        ),
+        onTap: () {
+          Navigator.pushNamed(
+                  context,
+                  Routes.eventChat,
+                  arguments: event,
+                );
+        },
       ),
     );
   }

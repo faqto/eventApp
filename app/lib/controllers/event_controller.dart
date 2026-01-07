@@ -2,19 +2,18 @@ import 'package:app/models/events_model.dart';
 import 'package:flutter/material.dart';
 
 class EventController extends ChangeNotifier {
-
   final List<Event> _events = [];
-  
+
   // Read-only access
   List<Event> get events => List.unmodifiable(_events);
 
   // CREATE
   void addEvent(Event event) {
-  if (!events.any((e) => e.id == event.id)) {
-    _events.add(event);     
-    notifyListeners();
+    if (!events.any((e) => e.id == event.id)) {
+      _events.add(event);
+      notifyListeners();
+    }
   }
-}
 
   // DELETE
   void removeEvent(String id) {
@@ -31,7 +30,6 @@ class EventController extends ChangeNotifier {
     }
   }
 
-  
   // FILTERS
   List<Event> get upcoming =>
       events.where((e) => e.status == EventStatus.upcoming).toList();
@@ -41,16 +39,17 @@ class EventController extends ChangeNotifier {
 
   List<Event> get ended =>
       events.where((e) => e.status == EventStatus.ended).toList();
-      
+
   List<Event> get cancelled =>
       events.where((e) => e.status == EventStatus.cancelled).toList();
-
 
   void attendEvent(String eventId, String userId) {
     final index = _events.indexWhere((e) => e.id == eventId);
     if (index != -1) {
       final event = _events[index];
-      _events[index] = event.copyWith(attendeeIds: {...event.attendeeIds, userId});
+      _events[index] = event.copyWith(
+        attendeeIds: {...event.attendeeIds, userId},
+      );
       notifyListeners();
     }
   }
@@ -59,7 +58,9 @@ class EventController extends ChangeNotifier {
     final index = _events.indexWhere((e) => e.id == eventId);
     if (index != -1) {
       final event = _events[index];
-      _events[index] = event.copyWith(savedByIds: {...event.savedByIds, userId});
+      _events[index] = event.copyWith(
+        savedByIds: {...event.savedByIds, userId},
+      );
       notifyListeners();
     }
   }
@@ -68,7 +69,9 @@ class EventController extends ChangeNotifier {
     final index = _events.indexWhere((e) => e.id == eventId);
     if (index != -1) {
       final event = _events[index];
-      _events[index] = event.copyWith(attendeeIds: {...event.attendeeIds}..remove(userId));
+      _events[index] = event.copyWith(
+        attendeeIds: {...event.attendeeIds}..remove(userId),
+      );
       notifyListeners();
     }
   }
@@ -77,9 +80,18 @@ class EventController extends ChangeNotifier {
     final index = _events.indexWhere((e) => e.id == eventId);
     if (index != -1) {
       final event = _events[index];
-      _events[index] = event.copyWith(savedByIds: {...event.savedByIds}..remove(userId));
+      _events[index] = event.copyWith(
+        savedByIds: {...event.savedByIds}..remove(userId),
+      );
       notifyListeners();
     }
   }
 
+  Event? getEventById(String id) {
+    try {
+      return _events.firstWhere((e) => e.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
 }

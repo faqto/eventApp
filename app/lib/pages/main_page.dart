@@ -1,4 +1,4 @@
-import 'package:app/pages/chat_page.dart';
+import 'package:app/pages/chat_lists_page.dart';
 import 'package:app/pages/events_page.dart';
 import 'package:app/pages/menu_page.dart';
 import 'package:app/pages/profile_page.dart';
@@ -25,7 +25,7 @@ class _MainPageState extends State<MainPage> {
   ];
   final List<Widget> pages = [
     ProfilePage(),
-    ChatPage(),
+    ChatListsPage(),
     EventsPage(),
     MenuPage(),
   ];

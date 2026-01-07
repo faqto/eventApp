@@ -40,7 +40,7 @@ class _RegisterPageState extends State<RegisterPage> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                final result = context.read<AppController>().register(
+               final result = context.read<AppController>().userController.register(
                   _nameController.text,
                   _passwordController.text,
                 );

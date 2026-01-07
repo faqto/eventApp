@@ -1,6 +1,7 @@
 import 'package:app/models/events_model.dart';
 import 'package:app/routes/routes.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class EventsCard extends StatelessWidget {
   final Event event;
@@ -79,7 +80,7 @@ class EventsCard extends StatelessWidget {
                         const Icon(Icons.calendar_today, size: 14),
                         const SizedBox(width: 6),
                         Text(
-                          "${event.date.month}/${event.date.day}/${event.date.year}",
+                           DateFormat.yMMMd().format(event.dateTime),
                         ),
         
                         const SizedBox(width: 16),

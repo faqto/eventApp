@@ -10,7 +10,7 @@ class Event {
   final String title;
   final String description;
   final String category;
-  final DateTime date;
+  final DateTime dateTime;
   final String location;
   final EventStatus status;
   final String hostId;
@@ -20,26 +20,25 @@ class Event {
   final Set<String> savedByIds;   
   
 
-  Event(this.id, this.title,
-        this.description, 
-        this.category, 
-        this.date, 
-        this.location, 
-        this.status, 
-        this.hostId,
+  Event({required this.id, 
+        required this.title,
+        required this.description, 
+        required this.category, 
+        required this.dateTime , 
+        required this.location, 
+        required this.status, 
+        required this.hostId,
         Set<String>? attendeeIds,
         Set<String>? savedByIds,
-        ):
-        attendeeIds = attendeeIds ?? {},
-        savedByIds = savedByIds ?? {};
+        }): attendeeIds = attendeeIds ?? {},
+            savedByIds = savedByIds ?? {};
 
-  //copyWith method for updating event details
   Event copyWith({
     String? id,
     String? title,
     String? description,
     String? category,
-    DateTime? date,
+    DateTime? dateTime,
     String? location,
     EventStatus? status,
     String? hostId,
@@ -47,16 +46,16 @@ class Event {
     Set<String>? savedByIds
   }) {
     return Event(
-      id ?? this.id,
-      title ?? this.title,
-      description ?? this.description,
-      category ?? this.category,
-      date ?? this.date,
-      location ?? this.location,
-      status ?? this.status,
-      hostId ?? this.hostId,
-      attendeeIds ?? this.attendeeIds,
-      savedByIds ?? this.savedByIds
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      dateTime: dateTime ?? this.dateTime,
+      location: location ?? this.location,
+      status: status ?? this.status,
+      hostId: hostId ?? this.hostId,
+      attendeeIds: attendeeIds ?? this.attendeeIds,
+      savedByIds: savedByIds ?? this.savedByIds
     );
   }
 }

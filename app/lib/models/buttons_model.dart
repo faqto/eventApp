@@ -1,13 +1,15 @@
-import 'dart:ui';
+import 'package:flutter/material.dart';
 
 class ButtonAction {
   final String title;
-  final Color color;
   final VoidCallback onTap;
+  final Color color;
+  final IconData icon;
 
-  ButtonAction({
+  const ButtonAction({
     required this.title,
-    required this.color,
     required this.onTap,
+    required this.color,
+    required this.icon,
   });
 }

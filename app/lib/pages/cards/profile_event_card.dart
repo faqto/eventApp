@@ -2,6 +2,7 @@ import 'package:app/controllers/app_controller.dart';
 import 'package:app/models/events_model.dart';
 import 'package:app/routes/routes.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class ProfileEventCard extends StatelessWidget {
@@ -53,7 +54,7 @@ class ProfileEventCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Date: ${event.date.month}/${event.date.day}/${event.date.year}',
+                  DateFormat.yMMMd().format(event.dateTime),
                   style: TextStyle(fontSize: 12, color: Colors.black54),
                 ),
                 Text(
