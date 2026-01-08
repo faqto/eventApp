@@ -1,11 +1,11 @@
-import 'package:app/pages/about_page.dart';
+import 'package:app/pages/edit_profile_page.dart';
+import 'package:flutter/material.dart';
 import 'package:app/pages/create_event_page.dart';
 import 'package:app/pages/event_history_page.dart';
 import 'package:app/pages/chat_event_page.dart';
 import 'package:app/pages/login_page.dart';
 import 'package:app/pages/modify_event_page.dart';
 import 'package:app/pages/register_page.dart';
-import 'package:flutter/material.dart';
 import 'package:app/pages/event_details_page.dart';
 import 'package:app/models/events_model.dart';
 import 'package:app/routes/routes.dart';
@@ -15,10 +15,8 @@ class RouteGenerator {
     switch (settings.name) {
       case Routes.eventDetails:
         return _eventRoute(settings, (event) => EventDetailsPage(event: event));
-
       case Routes.modifyEvent:
         return _eventRoute(settings, (event) => ModifyEventPage(event: event));
-
       case Routes.eventChat:
         return _eventRoute(settings, (event) => EventChatPage(event: event));
 
@@ -28,15 +26,15 @@ class RouteGenerator {
       case Routes.eventHistory:
         return MaterialPageRoute(builder: (_) => const EventHistoryPage());
 
-      case Routes.about:
-        return MaterialPageRoute(builder: (_) => const AboutPage());
-
       case Routes.login:
         return MaterialPageRoute(builder: (_) => const LoginPage());
 
       case Routes.register:
         return MaterialPageRoute(builder: (_) => const RegisterPage());
-
+        
+      case Routes.editProfile:
+        return MaterialPageRoute(builder: (_) => const EditProfilePage());
+   
 
       case Routes.main:
       default:
@@ -61,6 +59,6 @@ class RouteGenerator {
     if (args is Event) {
       return MaterialPageRoute(builder: (_) => builder(args));
     }
-    return _errorRoute("Event data is missing");
+    return _errorRoute("Event data is missing or invalid");
   }
 }

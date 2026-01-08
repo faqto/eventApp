@@ -37,12 +37,6 @@ class MenuPage extends StatelessWidget {
         onTap: () => Navigator.pushNamed(context, Routes.eventHistory),
       ),
       ButtonAction(
-        title: "About Us",
-        icon: Icons.info_outline,
-        color: Colors.grey.shade300,
-        onTap: () => Navigator.pushNamed(context, Routes.about),
-      ),
-      ButtonAction(
         title: "Logout",
         icon: Icons.logout_rounded,
         color: Colors.red.shade300,

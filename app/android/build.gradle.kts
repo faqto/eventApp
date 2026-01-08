@@ -1,8 +1,22 @@
+buildscript {
+
+    repositories {
+      // Make sure that you have the following two repositories
+      google()  // Google's Maven repository
+      mavenCentral()  // Maven Central repository
+    }
+
+    dependencies {
+      classpath("com.google.gms:google-services:4.4.0")
+    }
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
     }
+
 }
 
 val newBuildDir: Directory =
@@ -22,3 +36,5 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
+

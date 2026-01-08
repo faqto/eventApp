@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
+
   static void jumpTo(BuildContext context, int pageIndex) {
     final state = context.findAncestorStateOfType<_MainPageState>();
     state?._setPage(pageIndex);
@@ -17,34 +18,27 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  final List<String> title = [
-    "Profile",
-    "Messages",
-   'Events',
-    "Menu",
-  ];
+  final List<String> title = ["Profile", "Messages", 'Events', "Menu"];
   final List<Widget> pages = [
     ProfilePage(),
     ChatListsPage(),
     EventsPage(),
     MenuPage(),
   ];
-   
 
   int _currentpage = 0;
 
   void _setPage(int i) {
     setState(() => _currentpage = i);
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        
         title: Text(title[_currentpage]),
         centerTitle: true,
-        backgroundColor: Color(0xFFB39DFF)
+        backgroundColor: Color(0xFFB39DFF),
       ),
 
       body: pages[_currentpage],
@@ -56,7 +50,7 @@ class _MainPageState extends State<MainPage> {
 
         currentIndex: _currentpage,
         onTap: (i) => setState(() => _currentpage = i),
-        
+
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'profile'),
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'chat'),

@@ -9,7 +9,6 @@ class EventActionsSection extends StatelessWidget {
   final int joinedCount;
   final int savedCount;
   
-  // Callbacks for actions
   final VoidCallback onEditPressed;
   final VoidCallback onJoinPressed;
   final VoidCallback onSavePressed;
@@ -35,7 +34,6 @@ class EventActionsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Stats Row
           Row(
             children: [
               Icon(Icons.people, size: 20, color: Colors.blue.shade600,),
@@ -62,7 +60,6 @@ class EventActionsSection extends StatelessWidget {
           
           const SizedBox(height: 20),
 
-          // host edit/modify event button
           if (isHost && event.status == EventStatus.upcoming)
             _buildFullWidthButton(
               onPressed: onEditPressed,

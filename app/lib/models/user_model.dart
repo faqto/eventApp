@@ -2,25 +2,38 @@ class User {
   final String id;
   final String name;
   final String email;
-  String? profilePictureUrl;
-  String? bio;
-  bool isLoggedIn;
-
-  final String passwordHash;
+  final String? bio;
+  final String? profilePictureUrl; 
 
   User({
     required this.id,
     required this.name,
     required this.email,
-    this.profilePictureUrl,
     this.bio,
-    this.isLoggedIn = false,
-    this.passwordHash = '',
+    this.profilePictureUrl,
   });
-    factory User.empty() => User(
-        id: '',
-        name: '',
-        email: '',
-        passwordHash: '',
-      );
+  static User empty = User(
+    id: '',
+    name: '',
+    email: '',
+    bio: null,
+    profilePictureUrl: null,
+  );
+  factory User.emptyFactory() => empty;
+
+  User copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? bio,
+    String? profilePictureUrl,
+  }) {
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      bio: bio ?? this.bio,
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
+    );
+  }
 }

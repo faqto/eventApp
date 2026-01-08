@@ -12,15 +12,16 @@ class ChatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        title: Text(event.title),
+        title: Text(event.title
+        ),
         subtitle: Text(event.location),
         trailing: Text(event.status.name),
         leadingAndTrailingTextStyle: TextStyle(
             color: EventUtils.statusColor(event.status),
-        )
-        ,
+        ),
         titleTextStyle: TextStyle(
-          fontSize: 18
+          fontSize: 18,
+          color: Colors.black
         ),
         onTap: () {
           Navigator.pushNamed(

@@ -1,26 +1,38 @@
 import 'package:flutter/material.dart';
 
-class StatItem extends StatelessWidget {
+class ProfileStatItem extends StatelessWidget {
   final String label;
   final String value;
+  final IconData? icon;
 
-  const StatItem({required this.label, required this.value, super.key});
+  const ProfileStatItem({
+    super.key,
+    required this.label,
+    required this.value,
+    this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const SizedBox(height: 6),
+        if (icon != null)
+          Icon(icon!, color: Colors.black, size: 24),
         Text(
           value,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
         ),
-        const SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(color:Colors.white ),
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.black,
+          ),
         ),
-        const SizedBox(height: 6),
       ],
     );
   }

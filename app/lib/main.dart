@@ -1,32 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'package:app/controllers/app_controller.dart';
-import 'package:app/controllers/chat_controller.dart';
-import 'package:app/controllers/event_controller.dart';
 import 'package:app/controllers/user_controller.dart';
-import 'package:app/pages/login_page.dart';
-import 'package:app/pages/main_page.dart';
+import 'package:app/controllers/event_controller.dart';
+import 'package:app/controllers/chat_controller.dart';
+import 'package:app/controllers/app_controller.dart';
 import 'package:app/routes/route_generator.dart';
+import 'package:app/firebase_options.dart';
+import 'package:app/auth_wrapper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final userController = UserController();
   final eventController = EventController();
   final chatController = ChatController();
-  userController.addSampleUsers();
-
-  await userController.restoreCurrentUser();
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: userController),
-        ChangeNotifierProvider.value(value: eventController),
-        ChangeNotifierProvider.value(value: chatController),
-
-       
-        ChangeNotifierProvider(
+        ChangeNotifierProvider<UserController>.value(value: userController),
+        ChangeNotifierProvider<EventController>.value(value: eventController),
+        ChangeNotifierProvider<ChatController>.value(value: chatController),
+        ChangeNotifierProvider<AppController>(
           create: (_) => AppController(userController, eventController),
         ),
       ],
@@ -40,12 +37,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<UserController>();
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       onGenerateRoute: RouteGenerator.generateRoute,
-      home: user.isLoggedIn ? const MainPage() : const LoginPage(),
+      home: const AuthWrapper(),
     );
   }
 }

@@ -65,7 +65,7 @@ class ProfileEventCard extends StatelessWidget {
                 const SizedBox(height: 8),
 
               // Conditional modify button
-              if (event.hostId == currentUser.id && event.status == EventStatus.upcoming)
+              if (event.hostId == currentUser!.id && event.status == EventStatus.upcoming)
                 Align(
                   alignment: Alignment.centerRight,
                   child: ElevatedButton(

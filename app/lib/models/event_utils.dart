@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'events_model.dart';
 
 class EventUtils {
-  // Returns display text for status
   static String statusText(EventStatus status) {
     switch (status) {
       case EventStatus.upcoming:
@@ -16,7 +15,6 @@ class EventUtils {
     }
   }
 
-  // Returns color for status badge
   static Color statusColor(EventStatus status) {
     switch (status) {
       case EventStatus.upcoming:
@@ -29,4 +27,5 @@ class EventUtils {
         return Colors.red;
     }
   }
+
 }

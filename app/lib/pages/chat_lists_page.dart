@@ -23,7 +23,10 @@ class ChatListsPage extends StatelessWidget {
     return ListView.builder(
       itemCount: myEvents.length,
       itemBuilder: (context, index) {
-        return ChatCard(event: myEvents[index]);
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ChatCard(event: myEvents[index]),
+        );
       },
     );
   }

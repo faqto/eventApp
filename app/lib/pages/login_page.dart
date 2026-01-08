@@ -1,6 +1,9 @@
+import 'package:app/pages/widgets/login_register_header.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:app/controllers/app_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:app/controllers/user_controller.dart';
+import 'package:app/auth.dart';
 import 'package:app/routes/routes.dart';
 
 class LoginPage extends StatefulWidget {
@@ -12,71 +15,67 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   bool _isLoggingIn = false;
+  String? error;
 
-  void _login(BuildContext context) async {
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _login(BuildContext context) async {
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() => _isLoggingIn = true);
+    setState(() {
+      _isLoggingIn = true;
+      error = null;
+    });
 
-  final app = context.read<AppController>();
-  final name = _nameController.text.trim();
-  final password = _passwordController.text;
+    try {
+      final auth = Auth();
+      await auth.signInWithEmailandPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
 
-  await Future.delayed(const Duration(seconds: 1)); 
+      final fb.User? fbUser = auth.currentUser;
+      if (fbUser != null) {
+        context.read<UserController>().setFromFirebaseUser(fbUser);
+        Navigator.pushNamedAndRemoveUntil(context, Routes.main, (route) => false);
+      }
 
-  if (!mounted) return;  
-
-  final success = await app.userController.login(name, password); 
-
-  if (!mounted) return; 
-
-  if (success) {
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      Routes.main,
-      (route) => false,
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Wrong username or password')),
-    );
+    } on fb.FirebaseAuthException catch (e) {
+      setState(() => error = e.message ?? "Login failed");
+    } catch (e) {
+      setState(() => error = e.toString());
+    } finally {
+      if (mounted) setState(() => _isLoggingIn = false);
+    }
   }
-
-  setState(() => _isLoggingIn = false);
-}
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.only(left: 24,right: 24),
           child: Form(
             key: _formKey,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  "Login",
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                ),
+               const LoginRegisterHeader(
+                subtitle: "Login",
+              ),
                 const SizedBox(height: 40),
 
                 TextFormField(
-                  controller: _nameController,
+                  controller: _emailController,
                   decoration: const InputDecoration(
-                    labelText: 'Name',
+                    labelText: 'Email',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Enter your name' : null,
+                  validator: (v) => v == null || v.isEmpty ? 'Enter your email' : null,
                 ),
                 const SizedBox(height: 20),
-
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
@@ -84,38 +83,36 @@ class _LoginPageState extends State<LoginPage> {
                     labelText: 'Password',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Enter your password'
-                      : null,
+                  validator: (v) => v == null || v.isEmpty ? 'Enter your password' : null,
                 ),
-                const SizedBox(height: 30),
 
+                if (error != null) ...[
+                  const SizedBox(height: 12),
+                  Text(error!, style: const TextStyle(color: Colors.red)),
+                ],
+
+                const SizedBox(height: 30),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _isLoggingIn ? null : () => _login(context),
                     child: _isLoggingIn
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
+                        ? const CircularProgressIndicator(color: Colors.white)
                         : const Text("Login"),
                   ),
                 ),
-                const SizedBox(height: 16),
 
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("You don't have an account? "),
+                    const Text("Don't have an account? "),
                     TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, Routes.register);
-                      },
+                      onPressed: () => Navigator.pushNamed(context, Routes.register),
                       child: const Text("Create account"),
                     ),
                   ],
                 ),
-
               ],
             ),
           ),
@@ -124,5 +121,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-
-

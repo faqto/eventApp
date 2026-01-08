@@ -1,8 +1,11 @@
+import 'package:app/pages/widgets/create_event/category_picker.dart';
+import 'package:app/pages/widgets/create_event/date_time_picker.dart';
+import 'package:app/pages/widgets/create_event/duration_picker.dart';
+import 'package:app/pages/widgets/create_event/event_form.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:app/controllers/event_controller.dart';
 import 'package:app/controllers/app_controller.dart';
-import 'package:app/models/events_model.dart';
+import 'package:app/controllers/event_controller.dart';
+import 'package:provider/provider.dart';
 
 class CreateEventPage extends StatefulWidget {
   const CreateEventPage({super.key});
@@ -13,83 +16,89 @@ class CreateEventPage extends StatefulWidget {
 
 class _CreateEventPageState extends State<CreateEventPage> {
   final _formKey = GlobalKey<FormState>();
-
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
 
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
-
+  DateTime? _selectedDateTime;
+  int _hoursDuration = 1;
+  int _minutesDuration = 0;
   String _selectedCategory = '';
 
   final List<String> categories = [
-    "Gaming", "Food", "Culture", "Environment","Sports", "Music", "Tech","Community"
+    "Gaming", "Food", "Culture", "Environment",
+    "Sports", "Music", "Tech", "Community",
   ];
 
-  // DATE PICKER
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDateTime(BuildContext context) async {
+    final pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
+    if (pickedDate == null) return;
 
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
-  }
-
-  // TIME PICKER
-  Future<void> _pickTime() async {
-    final picked = await showTimePicker(
+    final pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
     );
+    if (pickedTime == null) return;
 
-    if (picked != null) {
-      setState(() => _selectedTime = picked);
-    }
+    setState(() {
+      _selectedDateTime = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+    });
   }
 
-  void _createEvent() {
+  void _createEvent(BuildContext context) {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedDate == null || _selectedTime == null) {
+
+    if (_selectedDateTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select date and time')),
+        const SnackBar(content: Text('Please select event date and time')),
       );
       return;
     }
 
-    // Combine date + time
-    final eventDateTime = DateTime(
-      _selectedDate!.year,
-      _selectedDate!.month,
-      _selectedDate!.day,
-      _selectedTime!.hour,
-      _selectedTime!.minute,
-    );
+    final duration = Duration(hours: _hoursDuration, minutes: _minutesDuration);
+    final endTime = _selectedDateTime!.add(duration);
 
     final app = context.read<AppController>();
     final events = context.read<EventController>();
+    
+    final user = app.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You must be logged in to create events')),
+      );
+      return;
+    }
 
-    final event = Event(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: _titleController.text.trim(),                    
-      description: _descriptionController.text.trim(),         
-      category: _selectedCategory,                                
-      dateTime: eventDateTime,                                  
-      location: _locationController.text.trim(),               
-      status: EventStatus.upcoming,                           
-      hostId: app.currentUser.id,                             
-      attendeeIds: {},
-      savedByIds: {},
+    events.createEvent(
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      category: _selectedCategory,
+      dateTime: _selectedDateTime!,
+      endTime: endTime,
+      location: _locationController.text.trim(),
+      hostId: user.id,
     );
 
-    events.addEvent(event);
-
-    Navigator.pop(context); // go back after creation
+    Navigator.pop(context);
   }
 
   @override
@@ -97,88 +106,59 @@ class _CreateEventPageState extends State<CreateEventPage> {
     return Scaffold(
       appBar: AppBar(title: const Text("Create Event")),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // TITLE
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Event Title'),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-              ),
+        padding: const EdgeInsets.all(20),
+        child: EventForm(
+          formKey: _formKey,
+          titleController: _titleController,
+          descriptionController: _descriptionController,
+          locationController: _locationController,
+          children: [
+            CategoryPicker(
+              selectedCategory: _selectedCategory,
+              categories: categories,
+              onCategoryChanged: (category) {
+                setState(() => _selectedCategory = category);
+              },
+            ),
+            const SizedBox(height: 20),
 
-              const SizedBox(height: 12),
+            DateTimePicker(
+              selectedDateTime: _selectedDateTime,
+              onPickDateTime: () => _pickDateTime(context),
+            ),
+            const SizedBox(height: 20),
 
-              // DESCRIPTION
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-              ),
+            DurationPicker(
+              hoursDuration: _hoursDuration,
+              minutesDuration: _minutesDuration,
+              selectedDateTime: _selectedDateTime,
+              onHoursChanged: (hours) {
+                setState(() => _hoursDuration = hours);
+              },
+              onMinutesChanged: (minutes) {
+                setState(() => _minutesDuration = minutes);
+              },
+            ),
+            const SizedBox(height: 32),
 
-              const SizedBox(height: 12),
-
-              // LOCATION 
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(
-                  labelText: 'Location (City / Area)',
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () => _createEvent(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-              ),
-
-              const SizedBox(height: 16),
-
-              // DATE
-              ListTile(
-                title: Text(
-                  _selectedDate == null
-                      ? 'Select Date'
-                      : 'Date: ${_selectedDate!.toLocal().toString().split(' ')[0]}',
+                child: const Text(
+                  'Create Event',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: _pickDate,
               ),
-
-              // TIME
-              ListTile(
-                title: Text(
-                  _selectedTime == null
-                      ? 'Select Time'
-                      : 'Time: ${_selectedTime!.format(context)}',
-                ),
-                trailing: const Icon(Icons.access_time),
-                onTap: _pickTime,
-              ),
-
-              const SizedBox(height: 16),
-
-              // CATEGORY
-              DropdownButtonFormField<String>(
-                
-                items: categories
-                    .map(
-                      (c) => DropdownMenuItem(
-                        value: c,
-                        child: Text(c),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (v) => setState(() => _selectedCategory = v!),
-                decoration: const InputDecoration(labelText: 'Select Category'),
-              ),
-
-              const SizedBox(height: 24),
-
-              ElevatedButton(
-                onPressed: _createEvent,
-                child: const Text('Create Event'),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -10,7 +10,10 @@ class Event {
   final String title;
   final String description;
   final String category;
+
   final DateTime dateTime;
+  final DateTime endTime;
+
   final String location;
   final EventStatus status;
   final String hostId;
@@ -23,8 +26,10 @@ class Event {
   Event({required this.id, 
         required this.title,
         required this.description, 
-        required this.category, 
+        required this.category,
+
         required this.dateTime , 
+        required this.endTime,
         required this.location, 
         required this.status, 
         required this.hostId,
@@ -39,6 +44,7 @@ class Event {
     String? description,
     String? category,
     DateTime? dateTime,
+    DateTime? endTime,
     String? location,
     EventStatus? status,
     String? hostId,
@@ -51,11 +57,12 @@ class Event {
       description: description ?? this.description,
       category: category ?? this.category,
       dateTime: dateTime ?? this.dateTime,
+      endTime: endTime ?? this.endTime,
       location: location ?? this.location,
       status: status ?? this.status,
       hostId: hostId ?? this.hostId,
       attendeeIds: attendeeIds ?? this.attendeeIds,
-      savedByIds: savedByIds ?? this.savedByIds
+      savedByIds: savedByIds ?? this.savedByIds, 
     );
   }
 }
