@@ -1,9 +1,9 @@
-import 'package:app/controllers/app_controller.dart';
 import 'package:app/controllers/chat_controller.dart';
 import 'package:app/controllers/user_controller.dart';
 import 'package:app/models/chat_model.dart';
 import 'package:app/models/events_model.dart';
 import 'package:app/pages/widgets/chat_bubble.dart';
+import 'package:app/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -29,17 +29,14 @@ class _EventChatPageState extends State<EventChatPage> {
     
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final chatController = context.read<ChatController>();
-      final userController = context.read<UserController>();
 
-      // Check if chat is allowed for this event
+
+      await chatController.debugChatSystem(widget.event.id);
       _canChat = chatController.canChat(widget.event);
       
-      // Only load messages if chat is allowed
+     
       if (_canChat) {
-        await chatController.loadChatMessages(
-          widget.event.id,
-          userController: userController,
-        );
+        await chatController.loadChatMessages(widget.event.id);
       }
       
       if (mounted) {
@@ -75,7 +72,8 @@ class _EventChatPageState extends State<EventChatPage> {
     final text = _messageController.text.trim();
     if (text.isEmpty || _isSending || !_canChat) return;
 
-    final currentUser = context.read<AppController>().currentUser;
+    final userController = context.read<UserController>();
+    final currentUser = userController.currentUser;
     final chatController = context.read<ChatController>();
 
     if (currentUser == null) return;
@@ -85,7 +83,8 @@ class _EventChatPageState extends State<EventChatPage> {
     try {
       final message = chatController.createMessage(
         eventId: widget.event.id,
-        currentUser: currentUser,
+        currentUserId: currentUser.id,
+        currentUserName: currentUser.name,
         text: text,
       );
 
@@ -123,7 +122,7 @@ class _EventChatPageState extends State<EventChatPage> {
             Text(
               _canChat
                   ? "No messages yet. Start the conversation!"
-                  : "Chat is not available for this event",
+                  : "Chat is not available for this event.",
               style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
               textAlign: TextAlign.center,
             ),
@@ -138,15 +137,19 @@ class _EventChatPageState extends State<EventChatPage> {
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final msg = messages[index];
-        final currentUser = context.read<AppController>().currentUser;
+        final userController = context.read<UserController>();
+        final currentUser = userController.currentUser;
         final isMe = currentUser != null && msg.senderId == currentUser.id;
-        final showSenderInfo =
+        final showSenderInfo = 
             index == 0 || messages[index - 1].senderId != msg.senderId;
+        
+        final isSenderHost = msg.senderId == widget.event.hostId;
 
         return ChatBubble(
           message: msg,
           isMe: isMe,
           showSenderInfo: showSenderInfo,
+          isSenderHost: isSenderHost,
         );
       },
     );
@@ -161,7 +164,20 @@ class _EventChatPageState extends State<EventChatPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.event.title),
-        backgroundColor: const Color.fromARGB(255, 143, 111, 255),
+        backgroundColor: const Color(0xFF7F5DFB),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: Colors.white),
+            tooltip: 'Event Details',
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                Routes.eventDetails,
+                arguments: widget.event,
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [

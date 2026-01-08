@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Add this import
 
 class DurationPicker extends StatefulWidget {
   final int hoursDuration;
@@ -24,11 +25,21 @@ class _DurationPickerState extends State<DurationPicker> {
   late TextEditingController _daysController;
   late TextEditingController _hoursController;
   late TextEditingController _minutesController;
+  
+  bool _isUpdating = false;
 
   @override
   void initState() {
     super.initState();
-    // Convert hoursDuration and minutesDuration to days, hours, minutes
+    _updateControllersFromDuration();
+    
+    // Trigger initial duration calculation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _validateAndUpdate();
+    });
+  }
+
+  void _updateControllersFromDuration() {
     final totalMinutes = (widget.hoursDuration * 60) + widget.minutesDuration;
     final days = totalMinutes ~/ (24 * 60);
     final hours = (totalMinutes % (24 * 60)) ~/ 60;
@@ -37,28 +48,16 @@ class _DurationPickerState extends State<DurationPicker> {
     _daysController = TextEditingController(text: days.toString());
     _hoursController = TextEditingController(text: hours.toString());
     _minutesController = TextEditingController(text: minutes.toString());
-    
-    // Trigger initial duration calculation
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _validateAndUpdate();
-    });
   }
 
   @override
   void didUpdateWidget(DurationPicker oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.hoursDuration != oldWidget.hoursDuration || 
-        widget.minutesDuration != oldWidget.minutesDuration) {
-      final totalMinutes = (widget.hoursDuration * 60) + widget.minutesDuration;
-      final days = totalMinutes ~/ (24 * 60);
-      final hours = (totalMinutes % (24 * 60)) ~/ 60;
-      final minutes = totalMinutes % 60;
-
-      _daysController.text = days.toString();
-      _hoursController.text = hours.toString();
-      _minutesController.text = minutes.toString();
-      _validateAndUpdate();
+    if (!_isUpdating && 
+        (widget.hoursDuration != oldWidget.hoursDuration || 
+         widget.minutesDuration != oldWidget.minutesDuration)) {
+      _updateControllersFromDuration();
     }
   }
 
@@ -70,31 +69,57 @@ class _DurationPickerState extends State<DurationPicker> {
     super.dispose();
   }
 
-  bool _isValidNumber(String value) {
-    if (value.isEmpty) return true;
-    final number = int.tryParse(value);
-    return number != null && number >= 0;
-  }
-
   void _validateAndUpdate() {
-    final days = int.tryParse(_daysController.text) ?? 0;
-    final hours = int.tryParse(_hoursController.text) ?? 0;
-    final minutes = int.tryParse(_minutesController.text) ?? 0;
-
-    final isValidDays = _isValidNumber(_daysController.text);
-    final isValidHours = _isValidNumber(_hoursController.text) && hours < 24;
-    final isValidMinutes = _isValidNumber(_minutesController.text) && minutes < 60;
-
-    if (!isValidDays || !isValidHours || !isValidMinutes) {
-      return;
-    }
-
-    // Calculate total minutes
-    final totalMinutes = (days * 24 * 60) + (hours * 60) + minutes;
+    if (_isUpdating) return;
     
-    // Update the parent widget with hours and minutes
-    widget.onHoursChanged(totalMinutes ~/ 60);
-    widget.onMinutesChanged(totalMinutes % 60);
+    _isUpdating = true;
+    
+    try {
+      // Parse values, treating non-numbers and empty strings as 0
+      final days = int.tryParse(_daysController.text.trim()) ?? 0;
+      final hours = int.tryParse(_hoursController.text.trim()) ?? 0;
+      final minutes = int.tryParse(_minutesController.text.trim()) ?? 0;
+
+      // Ensure values are not negative
+      int fixedDays = days < 0 ? 0 : days;
+      int fixedHours = hours < 0 ? 0 : hours;
+      int fixedMinutes = minutes < 0 ? 0 : minutes;
+      
+      // Handle overflow: minutes > 59 roll over to hours
+      if (fixedMinutes >= 60) {
+        fixedHours += fixedMinutes ~/ 60;
+        fixedMinutes = fixedMinutes % 60;
+      }
+      
+      // Handle overflow: hours > 23 roll over to days
+      if (fixedHours >= 24) {
+        fixedDays += fixedHours ~/ 24;
+        fixedHours = fixedHours % 24;
+      }
+
+      // Update text fields with fixed values (only if different)
+      if (days != fixedDays) {
+        _daysController.text = fixedDays.toString();
+      }
+      if (hours != fixedHours) {
+        _hoursController.text = fixedHours.toString();
+      }
+      if (minutes != fixedMinutes) {
+        _minutesController.text = fixedMinutes.toString();
+      }
+
+      // Calculate total minutes
+      final totalMinutes = (fixedDays * 24 * 60) + (fixedHours * 60) + fixedMinutes;
+      
+      // Only update if changed
+      final currentTotalMinutes = (widget.hoursDuration * 60) + widget.minutesDuration;
+      if (totalMinutes != currentTotalMinutes) {
+        widget.onHoursChanged(totalMinutes ~/ 60);
+        widget.onMinutesChanged(totalMinutes % 60);
+      }
+    } finally {
+      _isUpdating = false;
+    }
   }
 
   String? _getErrorText(String label, String value) {
@@ -104,10 +129,13 @@ class _DurationPickerState extends State<DurationPicker> {
     if (number == null) return "Invalid number";
     if (number < 0) return "Cannot be negative";
     
-    if (label == "Hours" && number >= 24) return "Max 23 hours";
-    if (label == "Minutes" && number >= 60) return "Max 59 minutes";
-    
     return null;
+  }
+
+  // Helper method to format DateTime with AM/PM
+  String _formatDateTime(DateTime dateTime) {
+    final format = DateFormat('MMM d, yyyy h:mm a'); // Example: Jan 8, 2024 2:30 PM
+    return format.format(dateTime);
   }
 
   @override
@@ -166,7 +194,7 @@ class _DurationPickerState extends State<DurationPicker> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        "Event will end: ${endTime.toLocal().toString().split(".")[0]}",
+                        "Event will end: ${_formatDateTime(endTime)}",
                         style: TextStyle(
                           color: Colors.blue.shade800,
                           fontSize: 13,
@@ -211,7 +239,13 @@ class _DurationPickerState extends State<DurationPicker> {
                 vertical: 10,
               ),
             ),
-            onChanged: (value) => _validateAndUpdate(),
+            onChanged: (value) {
+              // Only validate if the value is valid or empty
+              final number = int.tryParse(value);
+              if (value.isEmpty || (number != null && number >= 0)) {
+                _validateAndUpdate();
+              }
+            },
           ),
         ],
       ),

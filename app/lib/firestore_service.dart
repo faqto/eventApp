@@ -175,29 +175,31 @@ class FirestoreService {
     return _db
         .collection(chatCollection)
         .where('eventId', isEqualTo: eventId)
-        .orderBy('timestamp', descending: false) 
-        .snapshots()
+        .snapshots()  
         .map((snapshot) {
-      return snapshot.docs.map((doc) => ChatMessage.fromFirestore(doc)).toList();
-    });
-  }
-
-  Future<List<ChatMessage>> loadAllChatMessages(String eventId) async {
-    try {
-      final querySnapshot = await _db
-          .collection(chatCollection)
-          .where('eventId', isEqualTo: eventId)
-          .orderBy('timestamp', descending: false)
-          .get();
-
-      return querySnapshot.docs
+      final messages = snapshot.docs
           .map((doc) => ChatMessage.fromFirestore(doc))
           .toList();
-    } catch (e) {
-      print('Error loading chat messages: $e');
-      return [];
-    }
+      messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      
+      return messages;
+    });
   }
+Future<List<ChatMessage>> loadAllChatMessages(String eventId) async {
+  try {
+    final querySnapshot = await _db
+        .collection(chatCollection)
+        .where('eventId', isEqualTo: eventId)
+        .get();
+    final messages = querySnapshot.docs
+        .map((doc) => ChatMessage.fromFirestore(doc))
+        .toList();
+    messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return messages;
+  } catch (e) {
+    return [];
+  }
+}
   Future<void> deleteEventChatMessages(String eventId) async {
     final querySnapshot = await _db
         .collection(chatCollection)
@@ -215,11 +217,11 @@ class FirestoreService {
     await _db.collection(chatCollection).doc(messageId).delete();
   }
 
-  Stream<List<ChatMessage>> streamRecentChatMessages(String eventId, {int limit = 50}) {
+ Stream<List<ChatMessage>> streamRecentChatMessages(String eventId, {int limit = 50}) {
   return _db
       .collection(chatCollection)
       .where('eventId', isEqualTo: eventId)
-      .orderBy('timestamp', descending: false) 
+      .orderBy('timestamp', descending: false)
       .limit(limit)
       .snapshots()
       .map((snapshot) {
@@ -229,10 +231,9 @@ class FirestoreService {
         id: doc.id,
         eventId: data['eventId'] ?? '',
         senderId: data['senderId'] ?? '',
-        senderName: data['senderName'] ?? '', 
-        senderProfilePic: data['senderProfilePic'] ?? 'assets/images/default_profile.png',
+        senderName: data['senderName'] ?? '',
         text: data['text'] ?? '',
-        timestamp: (data['timestamp'] as Timestamp).toDate(), 
+        timestamp: (data['timestamp'] as Timestamp).toDate(),
       );
     }).toList();
   });
@@ -327,5 +328,61 @@ class FirestoreService {
       }
       return event;
     }).where((event) => event != null).cast<Event>().toList();
+  }
+  
+    Future<List<User>> getUsersByIds(List<String> userIds) async {
+    if (userIds.isEmpty) return [];
+    
+    try {
+      final batches = <List<String>>[];
+      for (var i = 0; i < userIds.length; i += 10) {
+        final end = i + 10 > userIds.length ? userIds.length : i + 10;
+        batches.add(userIds.sublist(i, end));
+      }
+      
+      final allUsers = <User>[];
+      
+      for (final batch in batches) {
+        if (batch.isEmpty) continue;
+        
+        final querySnapshot = await _db
+            .collection(usersCollection)
+            .where(FieldPath.documentId, whereIn: batch)
+            .get();
+        
+        allUsers.addAll(
+          querySnapshot.docs.map((doc) {
+            final data = doc.data();
+            return User(
+              id: doc.id,
+              name: data['name'] ?? '',
+              email: data['email'] ?? '',
+              profilePictureUrl: data['profilePictureUrl'],
+              bio: data['bio'],
+            );
+          }).toList(),
+        );
+      }
+      
+      return allUsers;
+    } catch (e) {
+      print('Error fetching users by IDs: $e');
+      return [];
+    }
+  }
+  
+  Future<List<User>> getEventAttendees(String eventId) async {
+    try {
+      final event = await getEventById(eventId);
+      if (event == null) return [];
+    
+      final userIds = {event.hostId, ...event.attendeeIds}.toList();
+      if (userIds.isEmpty) return [];
+      
+      return await getUsersByIds(userIds);
+    } catch (e) {
+      print('Error fetching event attendees: $e');
+      return [];
+    }
   }
 }

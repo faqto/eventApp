@@ -1,4 +1,5 @@
 import 'package:app/controllers/app_controller.dart';
+import 'package:app/controllers/event_controller.dart'; // Add this import
 import 'package:app/models/events_model.dart';
 import 'package:app/routes/routes.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ class ProfileEventCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentUser = context.read<AppController>().currentUser;
+    final eventController = context.read<EventController>(); // Get EventController
 
     return InkWell(
       onTap: () {
@@ -60,15 +62,16 @@ class ProfileEventCard extends StatelessWidget {
                 Text(
                   'Location: ${event.location}',
                   style: TextStyle(fontSize: 12, color: Colors.black54),
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
-
-              // Conditional modify button
-              if (event.hostId == currentUser!.id && event.status == EventStatus.upcoming)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: ElevatedButton(
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // Conditional modify button for upcoming events
+                if (event.hostId == currentUser!.id && event.status == EventStatus.upcoming)
+                  ElevatedButton(
                     onPressed: () {
                       Navigator.pushNamed(
                         context,
@@ -78,11 +81,66 @@ class ProfileEventCard extends StatelessWidget {
                     },
                     child: const Text("Modify"),
                   ),
-                ),  
+                
+                const SizedBox(width: 8),
+                
+                // Conditional delete button for ended/cancelled events
+                if (event.hostId == currentUser.id && 
+                    (event.status == EventStatus.ended || event.status == EventStatus.cancelled))
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red, // Red color for delete
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () {
+                      _showDeleteConfirmationDialog(context, eventController, event.id, currentUser.id);
+                    },
+                    child: const Text("Delete"),
+                  ),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(
+    BuildContext context, 
+    EventController eventController, 
+    String eventId, 
+    String userId
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Event"),
+        content: const Text("Are you sure you want to delete this event? This action cannot be undone."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              final success = eventController.deleteEventByHost(eventId, userId);
+              if (success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Event deleted successfully")),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Failed to delete event")),
+                );
+              }
+              Navigator.pop(context);
+            },
+            child: const Text(
+              "Delete",
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
       ),
     );
   }

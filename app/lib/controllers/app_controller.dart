@@ -12,10 +12,8 @@ class AppController extends ChangeNotifier {
   
   AppController(this.userController, this.eventController);
   
-  // Change to nullable
   User? get currentUser => userController.currentUser;
 
-  // Update all methods to handle nullable user
   List<Event> get hostedEvents {
     final user = currentUser;
     if (user == null || user.id.isEmpty) return [];

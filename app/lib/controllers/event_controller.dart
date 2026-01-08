@@ -7,13 +7,13 @@ import 'package:flutter/material.dart';
 class EventController extends ChangeNotifier {
   final List<Event> _events = [];
   Timer? _statusTimer;
-  final FirestoreService _firestoreService = FirestoreService(); // Add this
+  final FirestoreService _firestoreService = FirestoreService();
 
   EventController() {
     _statusTimer = Timer.periodic(Duration(seconds: 5), (_) {
       _autoUpdateStatuses();
     });
-    _loadEventsFromFirestore(); // Load events from Firestore on initialization
+    _loadEventsFromFirestore();
   }
 
   @override
@@ -43,7 +43,7 @@ class EventController extends ChangeNotifier {
       if (e.status == EventStatus.cancelled || e.status == EventStatus.ended)continue;
       if (now.isAfter(e.endTime) && e.status != EventStatus.ended) {
         _events[i] = e.copyWith(status: EventStatus.ended);
-        _firestoreService.addOrUpdateEvent(_events[i]); // Sync to Firestore
+        _firestoreService.addOrUpdateEvent(_events[i]); 
         hasChanges = true;
         continue;
       }
@@ -51,13 +51,13 @@ class EventController extends ChangeNotifier {
           now.isBefore(e.endTime) &&
           e.status != EventStatus.ongoing) {
         _events[i] = e.copyWith(status: EventStatus.ongoing);
-        _firestoreService.addOrUpdateEvent(_events[i]); // Sync to Firestore
+        _firestoreService.addOrUpdateEvent(_events[i]); 
         hasChanges = true;
         continue;
       }
       if (now.isBefore(e.dateTime) && e.status != EventStatus.upcoming) {
         _events[i] = e.copyWith(status: EventStatus.upcoming);
-        _firestoreService.addOrUpdateEvent(_events[i]); // Sync to Firestore
+        _firestoreService.addOrUpdateEvent(_events[i]); 
         hasChanges = true;
       }
     }
@@ -77,7 +77,7 @@ class EventController extends ChangeNotifier {
     if (event.status != EventStatus.upcoming) return false;
 
     _events[index] = event.copyWith(status: EventStatus.cancelled);
-    _firestoreService.addOrUpdateEvent(_events[index]); // Sync to Firestore
+    _firestoreService.addOrUpdateEvent(_events[index]); 
     notifyListeners();
     return true;
   }
@@ -108,9 +108,7 @@ class EventController extends ChangeNotifier {
     if (event.id.isNotEmpty) {
       _events.removeWhere((e) => e.id == id);
       _firestoreService.deleteEvent(id);
-      
       _firestoreService.deleteEventChatMessages(id);
-      
       notifyListeners();
     }
   }
@@ -242,5 +240,34 @@ class EventController extends ChangeNotifier {
     for (final event in _events) {
       await _firestoreService.addOrUpdateEvent(event);
     }
+  }
+
+  bool canDeleteEvent(String eventId, String userId) {
+    final event = getEventById(eventId);
+    if (event == null) return false;
+    
+    return event.hostId == userId && 
+          (event.status == EventStatus.ended || event.status == EventStatus.cancelled);
+  }
+  bool deleteEventByHost(String eventId, String userId) {
+    final index = _events.indexWhere((e) => e.id == eventId);
+    if (index == -1) return false;
+
+    final event = _events[index];
+
+    if (event.hostId != userId) return false;
+    
+    if (event.status != EventStatus.ended && event.status != EventStatus.cancelled) {
+      return false;
+    }
+
+    _events.removeAt(index);
+
+    _firestoreService.deleteEvent(eventId);
+  
+    _firestoreService.deleteEventChatMessages(eventId);
+    
+    notifyListeners();
+    return true;
   }
 }

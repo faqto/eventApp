@@ -81,12 +81,6 @@ class _CreateEventPageState extends State<CreateEventPage> {
     final events = context.read<EventController>();
     
     final user = app.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You must be logged in to create events')),
-      );
-      return;
-    }
 
     events.createEvent(
       title: _titleController.text.trim(),
@@ -95,7 +89,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
       dateTime: _selectedDateTime!,
       endTime: endTime,
       location: _locationController.text.trim(),
-      hostId: user.id,
+      hostId: user!.id,
     );
 
     Navigator.pop(context);

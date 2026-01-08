@@ -6,103 +6,18 @@ class ChatBubble extends StatelessWidget {
   final ChatMessage message;
   final bool isMe;
   final bool showSenderInfo;
+  final bool isSenderHost;
 
   const ChatBubble({
     super.key,
     required this.message,
     required this.isMe,
     this.showSenderInfo = true,
+    this.isSenderHost = false,
   });
 
   String _formatTime(DateTime time) {
     return DateFormat('HH:mm').format(time);
-  }
-
-  Widget _buildProfileImage() {
-    if (message.senderProfilePic.startsWith('assets/')) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Image.asset(
-          message.senderProfilePic,
-          width: 40,
-          height: 40,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 24,
-              ),
-            );
-          },
-        ),
-      );
-    } else if (message.senderProfilePic.startsWith('http')) {
-      // Network image for URLs
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Image.network(
-          message.senderProfilePic,
-          width: 40,
-          height: 40,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                ),
-              ),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 24,
-              ),
-            );
-          },
-        ),
-      );
-    } else {
-      return Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: isMe 
-              ? const Color.fromARGB(255, 143, 111, 255)
-              : Colors.grey.shade300,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Icon(
-          Icons.person,
-          color: Colors.white,
-          size: 24,
-        ),
-      );
-    }
   }
 
   @override
@@ -113,11 +28,6 @@ class ChatBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          if (!isMe) ...[
-            _buildProfileImage(),
-            const SizedBox(width: 8),
-          ],
-          
           Expanded(
             child: Column(
               crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -125,19 +35,43 @@ class ChatBubble extends StatelessWidget {
                 if (showSenderInfo && !isMe)
                   Padding(
                     padding: const EdgeInsets.only(left: 4, bottom: 4),
-                    child: Text(
-                      message.senderName,
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    child: Row(
+                      children: [
+                        if (isSenderHost)
+                          Container(
+                            margin: const EdgeInsets.only(right: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 255, 193, 7),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Host',
+                              style: TextStyle(
+                                color: Colors.grey.shade800,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        Text(
+                          message.senderName,
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                            fontWeight: isSenderHost ? FontWeight.bold : FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
                 Container(
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.7,
+                    maxWidth: MediaQuery.of(context).size.width * 0.75, 
                   ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -187,11 +121,6 @@ class ChatBubble extends StatelessWidget {
               ],
             ),
           ),
-          
-          if (isMe) ...[
-            const SizedBox(width: 8),
-            _buildProfileImage(),
-          ],
         ],
       ),
     );

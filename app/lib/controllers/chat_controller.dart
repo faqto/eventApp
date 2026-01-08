@@ -1,10 +1,8 @@
 import 'dart:async';
-
-import 'package:app/controllers/user_controller.dart';
 import 'package:app/firestore_service.dart';
 import 'package:app/models/chat_model.dart';
 import 'package:app/models/events_model.dart';
-import 'package:app/models/user_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class ChatController extends ChangeNotifier {
@@ -13,57 +11,70 @@ class ChatController extends ChangeNotifier {
   final Map<String, StreamSubscription> _subscriptions = {};
   final FirestoreService _firestoreService = FirestoreService();
   
-  // Store users by ID for quick access
-  final Map<String, User> _usersById = {};
-  
-  Future<void> loadChatMessages(String eventId, {UserController? userController}) async {
-    if (_loadingStates[eventId] == true || _subscriptions.containsKey(eventId)) {
-      return;
-    }
-
+  Future<void> loadChatMessages(String eventId) async {
+    print('\n🚀🚀🚀 CHAT LOAD STARTED 🚀🚀🚀');
+    print('EVENT ID: $eventId');
+    _clearExistingData(eventId);
+    
     _loadingStates[eventId] = true;
     notifyListeners();
 
     try {
-      // If we have a user controller, pre-load users
-      if (userController != null) {
-        _cacheUsers(userController.users);
-      }
-      
+      // Load existing messages from Firestore
+      print('📡 Calling FirestoreService.loadAllChatMessages...');
       final existingMessages = await _firestoreService.loadAllChatMessages(eventId);
+
+      if (existingMessages.isNotEmpty) {
+        print('📝 Sample messages:');
+        for (int i = 0; i < existingMessages.length && i < 3; i++) {
+          final msg = existingMessages[i];
+          print('   [${i + 1}] "${msg.text}" from ${msg.senderName} at ${msg.timestamp}');
+        }
+      } else {
+        print('📭 No messages found for this event');
+      }
+
       _messagesByEvent[eventId] = existingMessages;
+      
+      // Set up real-time listener for new messages
       _setupRealtimeListener(eventId);
       
       _loadingStates[eventId] = false;
       notifyListeners();
+      
+      print('Chat loaded for event $eventId: ${existingMessages.length} messages');
     } catch (e) {
-      _loadingStates[eventId] = false;
       print('Error loading chat messages: $e');
+      _loadingStates[eventId] = false;
       notifyListeners();
     }
   }
 
-  // Cache users for quick lookup
-  void _cacheUsers(List<User> users) {
-    for (final user in users) {
-      _usersById[user.id] = user;
+  void _clearExistingData(String eventId) {
+    // Clear any existing messages for this event
+    _messagesByEvent.remove(eventId);
+    _loadingStates.remove(eventId);
+    
+    // Cancel existing subscription if any
+    if (_subscriptions.containsKey(eventId)) {
+      _subscriptions[eventId]?.cancel();
+      _subscriptions.remove(eventId);
     }
-  }
-
-  // Get user info for a sender
-  User? getUserInfo(String userId) {
-    return _usersById[userId];
   }
 
   void _setupRealtimeListener(String eventId) {
+    // Cancel existing subscription if any
     _subscriptions[eventId]?.cancel();
+    
+    // Create new subscription
     _subscriptions[eventId] = _firestoreService
         .streamChatMessages(eventId)
         .listen((messages) {
+      // Update messages for this event with fresh data
       _messagesByEvent[eventId] = messages;
       notifyListeners();
     }, onError: (error) {
-      print('Error in chat stream: $error');
+      print('Error in chat stream for event $eventId: $error');
     });
   }
 
@@ -77,34 +88,41 @@ class ChatController extends ChangeNotifier {
 
   Future<void> sendMessage(ChatMessage message) async {
     final eventId = message.eventId;
+    
+    // Optimistically add to local list
     _messagesByEvent.putIfAbsent(eventId, () => []);
     _messagesByEvent[eventId]!.add(message);
     notifyListeners();
-    await _firestoreService.addChatMessage(message);
+    
+    try {
+      // Send to Firestore
+      await _firestoreService.addChatMessage(message);
+    } catch (e) {
+      // Remove from local list if failed
+      _messagesByEvent[eventId]!.remove(message);
+      notifyListeners();
+      rethrow;
+    }
   }
 
-  // Helper method to create message with user info
   ChatMessage createMessage({
     required String eventId,
-    required User currentUser,
+    required String currentUserId,
+    required String currentUserName,
     required String text,
   }) {
     return ChatMessage(
-      id: '${DateTime.now().millisecondsSinceEpoch}_${currentUser.id}',
+      id: '${DateTime.now().millisecondsSinceEpoch}_$currentUserId',
       eventId: eventId,
-      senderId: currentUser.id,
-      senderName: currentUser.name,
-      senderProfilePic: currentUser.profilePictureUrl ?? 'assets/images/default_profile.png',
+      senderId: currentUserId,
+      senderName: currentUserName,
       text: text,
       timestamp: DateTime.now(),
     );
   }
 
   void clearEventChat(String eventId) {
-    _messagesByEvent.remove(eventId);
-    _loadingStates.remove(eventId);
-    _subscriptions[eventId]?.cancel();
-    _subscriptions.remove(eventId);
+    _clearExistingData(eventId);
     notifyListeners();
   }
   
@@ -120,5 +138,60 @@ class ChatController extends ChangeNotifier {
     }
     _subscriptions.clear();
     super.dispose();
+  }
+
+  Future<void> debugChatSystem(String eventId) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final query = await firestore
+          .collection('chat_messages')
+          .where('eventId', isEqualTo: eventId)
+          .orderBy('timestamp', descending: false)
+          .get();
+      
+      if (query.docs.isNotEmpty) {
+        for (var doc in query.docs) {
+          final data = doc.data();
+          print('  📄 Document ${doc.id}:');
+          data.forEach((key, value) {
+            print('    $key: $value');
+          });
+        }
+      } else {
+        final allDocs = await firestore.collection('chat_messages').limit(5).get();
+        for (var doc in allDocs.docs) {
+          final data = doc.data();
+          print('  📄 ${doc.id} - eventId: ${data['eventId']}');
+        }
+      }
+      
+      // Test 2: ChatModel parsing
+      print('\n📊 TEST 2: ChatModel Parsing');
+      if (query.docs.isNotEmpty) {
+        final doc = query.docs.first;
+        print('  Parsing document: ${doc.id}');
+        try {
+          final chatMessage = ChatMessage.fromFirestore(doc);
+          print('  ✅ Successfully parsed ChatMessage:');
+          print('     Text: "${chatMessage.text}"');
+          print('     Sender: ${chatMessage.senderName} (${chatMessage.senderId})');
+          print('     Timestamp: ${chatMessage.timestamp}');
+        } catch (e) {
+          print('  ❌ Failed to parse: $e');
+        }
+      }
+      
+      // Test 3: Current state
+      print('\n📊 TEST 3: Current Controller State');
+      print('  _messagesByEvent[$eventId]: ${_messagesByEvent[eventId]?.length ?? 0} messages');
+      print('  _loadingStates[$eventId]: ${_loadingStates[eventId]}');
+      print('  _subscriptions[$eventId]: ${_subscriptions.containsKey(eventId)}');
+      
+      print('\n🎯 DEBUG COMPLETE 🎯\n');
+      
+    } catch (e) {
+      print('❌ DEBUG ERROR: $e');
+      print('Stack trace: ${e.toString()}');
+    }
   }
 }
