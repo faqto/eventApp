@@ -1,5 +1,5 @@
 import 'package:app/controllers/app_controller.dart';
-import 'package:app/controllers/event_controller.dart'; // Add this import
+import 'package:app/controllers/event_controller.dart'; 
 import 'package:app/models/events_model.dart';
 import 'package:app/routes/routes.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +14,7 @@ class ProfileEventCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentUser = context.read<AppController>().currentUser;
-    final eventController = context.read<EventController>(); // Get EventController
+    final eventController = context.read<EventController>();
 
     return InkWell(
       onTap: () {
@@ -25,6 +25,7 @@ class ProfileEventCard extends StatelessWidget {
         );
       },
       child: Container(
+        width: double.infinity,
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -52,7 +53,8 @@ class ProfileEventCard extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 12),
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
@@ -63,42 +65,25 @@ class ProfileEventCard extends StatelessWidget {
                   'Location: ${event.location}',
                   style: TextStyle(fontSize: 12, color: Colors.black54),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // Conditional modify button for upcoming events
-                if (event.hostId == currentUser!.id && event.status == EventStatus.upcoming)
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(
-                        context,
-                        Routes.modifyEvent,
-                        arguments: event,
-                      );
-                    },
-                    child: const Text("Modify"),
-                  ),
-                
+                const SizedBox(height: 8),
+                            
+                              ],
+                            ),
                 const SizedBox(width: 8),
-                
-                // Conditional delete button for ended/cancelled events
-                if (event.hostId == currentUser.id && 
-                    (event.status == EventStatus.ended || event.status == EventStatus.cancelled))
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red, // Red color for delete
-                      foregroundColor: Colors.white,
-                    ),
-                    onPressed: () {
-                      _showDeleteConfirmationDialog(context, eventController, event.id, currentUser.id);
-                    },
-                    child: const Text("Delete"),
-                  ),
-              ],
-            ),
+              
+            if (event.hostId == currentUser!.id && 
+                (event.status == EventStatus.ended || event.status == EventStatus.cancelled))
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red, 
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  _showDeleteConfirmationDialog(context, eventController, event.id, currentUser.id);
+                },
+                child: const Text("Delete"),
+              ),
+            
           ],
         ),
       ),
